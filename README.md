@@ -24,7 +24,8 @@ Assim, esse aplicativo surgiu com esse propósito: abrir um documento do Microso
 
 ## Linguagem
 
-Esse aplicativo foi criado utilizando-se o Microsoft Visual Studio 2010, versão Express.
+Esse aplicativo foi criado utilizando-se o Microsoft Visual Studio 2010, versão Express. Requer o Microsoft .Net
+Framework v4.0
 
 ## Uso
 
