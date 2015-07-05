@@ -164,12 +164,12 @@ namespace RemoveRSids
         /// </summary>
         private void Rotate()
         {
-            FileInfo ArquivoTemporario = new FileInfo(this.ArquivoTemporario);
             string ArquivoBackup = this.Arquivo;
             while (File.Exists(ArquivoBackup))
                 ArquivoBackup += ".bak";
-            this.RegistraLog("Criando backup do arquivo original (sob o nome \"{0}\") e substituindo-o pelo arquivo novo", this.Arquivo);
-            ArquivoTemporario.Replace(this.Arquivo, ArquivoBackup);
+            this.RegistraLog("Criando backup do arquivo original (sob o nome \"{0}\") e substituindo-o pelo arquivo novo", ArquivoBackup);
+            File.Move(this.Arquivo, ArquivoBackup);
+            File.Move(this.ArquivoTemporario, this.Arquivo);
         }
 
         /// <summary>
