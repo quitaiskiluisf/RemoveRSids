@@ -233,13 +233,80 @@ namespace RemoveRSids
 
 
         /// <summary>
-        /// Procura 
+        /// Faz as verificações necessárias para garantir que as revisões informadas poderão ser combinadas.
+        /// Elas somente serão combinadas se estiverem em sequencia (ou seja, se não houver nenhum outro elemento entre elas)
         /// </summary>
-        /// <param name="xml"></param>
-        /// <returns></returns>
+        /// <param name="r1">Revisão 1</param>
+        /// <param name="r2">Revisão 2</param>
+        /// <returns>True caso poderão ser combinadas; senão false</returns>
+        private static bool VerificaPodeUnificarRevisoes(XmlNode r1, XmlNode r2)
+        {
+            return (r1.NextSibling == r2 || r2.NextSibling == r1)
+                   && r1.HasChildNodes
+                   && r1.FirstChild.Name == "w:t"
+                   && r1.FirstChild.HasChildNodes
+                   && r1.FirstChild.FirstChild is XmlText
+                   && r2.HasChildNodes
+                   && r2.FirstChild.Name == "w:t"
+                   && r2.FirstChild.HasChildNodes
+                   && r2.FirstChild.FirstChild is XmlText;
+        }
+
+
+        private static void UnificaRevisoes(XmlNode r1, XmlNode r2)
+        {
+            //Determina qual node aparece antes, se o r1 ou o r2. Isso porque a tag que vem depois será removida da árvore,
+            //enquanto que o seu conteúdo será acrescentado à tag que vem primeiro.
+            XmlNode antes, depois;
+
+            if (r1.NextSibling == r2)
+            {
+                antes = r1;
+                depois = r2;
+            }
+            else if (r2.NextSibling == r1)
+            {
+                antes = r2;
+                depois = r1;
+            }
+            else
+                throw new Exception("Não é possível unificar as tags informadas porque elas não são sibblings");
+
+            XmlText TextoAntes = (XmlText)antes.FirstChild.FirstChild;
+            XmlText TextoDepois = (XmlText)depois.FirstChild.FirstChild;
+
+            TextoAntes.AppendData(TextoDepois.Data);
+
+            depois.ParentNode.RemoveChild(depois);
+        }
+
+
+        /// <summary>
+        /// Procura por tags w:r que são sibblings e as remove
+        /// </summary>
+        /// <param name="xml">Tag onde serão procurados os w:r</param>
+        /// <returns>True caso houveram alterações; false caso não houveram</returns>
         protected bool ProcessaXmlUnificaRevisoes(XmlDocument xml)
         {
-            return false;
+            //return ProcessaXmlUnificaRevisoesRecursivo((XmlNode)xml.DocumentElement);
+            XmlNodeList lista = xml.GetElementsByTagName("w:r");
+
+            //Percorre a lista de trás para frente (para evitar que a alteração no número de nodes influencie na
+            //lógica de cálculo
+            for (int i = lista.Count - 1; i > 0; i--)
+            {
+                XmlNode rAtual = lista[i];
+                XmlNode rAnterior = lista[i - 1];
+
+                if (VerificaPodeUnificarRevisoes(rAtual, rAnterior))
+                {
+                    RegistraLog("Unificando uma revisão...");
+                    UnificaRevisoes(rAtual, rAnterior);
+                }
+
+
+            }
+            return true;
         }
 
 
