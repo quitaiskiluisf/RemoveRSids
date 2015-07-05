@@ -179,7 +179,7 @@ namespace RemoveRSids
         /// <returns>True caso houveram alterações; false caso não houveram</returns>
         protected bool ProcessaXmlRsids(XmlDocument xml)
         {
-            return ProcessaXmlRecursivo((XmlNode)xml.DocumentElement);
+            return ProcessaXmlRsidsRecursivo((XmlNode)xml.DocumentElement);
         }
 
 
@@ -188,7 +188,7 @@ namespace RemoveRSids
         /// </summary>
         /// <param name="xml">Xml onde o parâmetro será procurado</param>
         /// <returns>True caso houveram alterações neste node ou em algum dos filhos; false caso não houveram</returns>
-        protected bool ProcessaXmlRecursivo(XmlNode xml)
+        protected bool ProcessaXmlRsidsRecursivo(XmlNode xml)
         {
             bool resultado = false;
 
@@ -226,7 +226,7 @@ namespace RemoveRSids
 
             //Processa os filhos
             foreach (XmlNode filho in xml.ChildNodes)
-                if (ProcessaXmlRecursivo(filho)) resultado = true;
+                if (ProcessaXmlRsidsRecursivo(filho)) resultado = true;
 
             return resultado;
         }
