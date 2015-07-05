@@ -253,30 +253,45 @@ namespace RemoveRSids
         }
 
 
+        /// <summary>
+        /// Dadas 2 revisões, realiza o processo de unificação entre elas, caso elas sejam siblings
+        /// </summary>
+        /// <param name="r1">Primeira revisão</param>
+        /// <param name="r2">Segunda revisão</param>
         private static void UnificaRevisoes(XmlNode r1, XmlNode r2)
         {
             //Determina qual node aparece antes, se o r1 ou o r2. Isso porque a tag que vem depois será removida da árvore,
             //enquanto que o seu conteúdo será acrescentado à tag que vem primeiro.
             XmlNode antes, depois;
 
-            if (r1.NextSibling == r2)
+            //Garante que eles são siblings
+            if (r1.NextSibling == r2 || r2.NextSibling == r1)
             {
-                antes = r1;
-                depois = r2;
-            }
-            else if (r2.NextSibling == r1)
-            {
-                antes = r2;
-                depois = r1;
+                bool EmOrdem = r1.NextSibling == r2;
+                antes = (EmOrdem ? r1 : r2);
+                depois = (EmOrdem ? r2 : r1);
             }
             else
                 throw new Exception("Não é possível unificar as tags informadas porque elas não são sibblings");
 
-            XmlText TextoAntes = (XmlText)antes.FirstChild.FirstChild;
+            //Junta os textos
+            XmlNode WTAntes = antes.FirstChild;
+            XmlText TextoAntes = (XmlText)WTAntes.FirstChild;
             XmlText TextoDepois = (XmlText)depois.FirstChild.FirstChild;
 
             TextoAntes.AppendData(TextoDepois.Data);
 
+            //Verifica se o atributo xml:space=preserve na tag w:t deve ser acrescentado, mantido ou eliminado
+            const string ATTR_XML_SPACE = "xml:space";
+            bool Existe = WTAntes.Attributes.GetNamedItem(ATTR_XML_SPACE) != null;
+            bool DeveExistir = (TextoAntes.Data.StartsWith(" ") || TextoAntes.Data.EndsWith(" "));
+
+            if (DeveExistir && !Existe)
+                ((XmlElement)WTAntes).SetAttribute(ATTR_XML_SPACE, "preserve");
+            else if (!DeveExistir && Existe)
+                WTAntes.Attributes.RemoveNamedItem(ATTR_XML_SPACE);
+
+            //Elimina o segundo node (pois ele foi unificado com o primeiro
             depois.ParentNode.RemoveChild(depois);
         }
 
@@ -303,8 +318,6 @@ namespace RemoveRSids
                     RegistraLog("Unificando uma revisão...");
                     UnificaRevisoes(rAtual, rAnterior);
                 }
-
-
             }
             return true;
         }
